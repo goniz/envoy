@@ -29,11 +29,6 @@ from google.protobuf import text_format
 from envoy.annotations import deprecation_pb2
 from udpa.annotations import migrate_pb2, status_pb2
 
-PROTO_PACKAGES = (
-    "google.api.annotations", "validate.validate", "envoy.annotations.resource",
-    "udpa.annotations.migrate", "udpa.annotations.security", "udpa.annotations.status",
-    "udpa.annotations.versioning", "udpa.annotations.sensitive")
-
 NEXT_FREE_FIELD_MIN = 5
 
 ENVOY_DEPRECATED_UNAVIALABLE_NAME = 'DEPRECATED_AND_UNAVAILABLE_DO_NOT_USE'
@@ -717,7 +712,7 @@ class ProtoFormatVisitor(visitor.Visitor):
 if __name__ == '__main__':
     proto_desc_path = sys.argv[1]
 
-    utils.load_protos(PROTO_PACKAGES)
+    utils.load_protos()
 
     file_proto = descriptor_pb2.FileDescriptorProto()
     input_text = pathlib.Path(proto_desc_path).read_text()
