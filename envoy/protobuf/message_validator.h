@@ -56,6 +56,11 @@ public:
    * throw an exception.
    */
   virtual void onDeprecatedField(absl::string_view description, bool soft_deprecation) PURE;
+
+  /**
+   * fixfix
+   */
+  virtual void onWorkInProgress(absl::string_view description) PURE;
 };
 
 class ValidationContext {

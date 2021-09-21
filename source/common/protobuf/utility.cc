@@ -17,6 +17,8 @@
 
 #include "absl/strings/match.h"
 #include "udpa/annotations/sensitive.pb.h"
+#include "udpa/annotations/status.pb.h"
+#include "xds/annotations/v3/status.pb.h"
 #include "yaml-cpp/yaml.h"
 
 using namespace std::chrono_literals;
@@ -367,6 +369,14 @@ public:
       return nullptr;
     }
 
+    const auto& field_status = field.options().GetExtension(xds::annotations::v3::field_status);
+    if (field_status.work_in_progress()) {
+      validation_visitor_.onWorkInProgress(
+          fmt::format("field '{}' is marked as work in progress. Use of this field is subject "
+                      "to breaking changes and is not covered by the security policy.",
+                      field.full_name()));
+    }
+
     // If this field is deprecated, warn or throw an error.
     if (field.options().deprecated()) {
       if (absl::StartsWith(field.name(), "hidden_envoy_deprecated_")) {
@@ -398,6 +408,28 @@ public:
   }
 
   void onMessage(const Protobuf::Message& message, const void*) override {
+    if (message.GetDescriptor()
+            ->options()
+            .GetExtension(xds::annotations::v3::message_status)
+            .work_in_progress()) {
+      validation_visitor_.onWorkInProgress(
+          fmt::format("message '{}' is marked as work in progress. Use of this message is subject "
+                      "to breaking changes and is not covered by the security policy.",
+                      message.GetTypeName()));
+    }
+
+    if (message.GetDescriptor()
+            ->file()
+            ->options()
+            .GetExtension(udpa::annotations::file_status)
+            .work_in_progress()) {
+      validation_visitor_.onWorkInProgress(fmt::format(
+          "message '{}' is contained in proto file '{}' marked as work in progress. Use of this "
+          "message is subject "
+          "to breaking changes and is not covered by the security policy.",
+          message.GetTypeName(), message.GetDescriptor()->file()->name()));
+    }
+
     // Reject unknown fields.
     const auto& unknown_fields = message.GetReflection()->GetUnknownFields(message);
     if (!unknown_fields.empty()) {

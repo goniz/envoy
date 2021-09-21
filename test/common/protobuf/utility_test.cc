@@ -21,6 +21,8 @@
 #include "source/common/protobuf/utility.h"
 #include "source/common/runtime/runtime_impl.h"
 
+#include "test/common/protobuf/utility_test_file_wip.pb.h"
+#include "test/common/protobuf/utility_test_message_field_wip.pb.h"
 #include "test/common/stats/stat_test_utility.h"
 #include "test/mocks/init/mocks.h"
 #include "test/mocks/local_info/mocks.h"
@@ -1558,6 +1560,37 @@ TEST(DurationUtilTest, OutOfRange) {
     duration.set_seconds(Protobuf::util::TimeUtil::kDurationMaxSeconds + 1);
     EXPECT_THROW(DurationUtil::durationToMilliseconds(duration), DurationUtil::OutOfRangeException);
   }
+}
+
+TEST_F(ProtobufUtilityTest, MessageInWipFile) {
+  utility_test::file_wip::Foo foo;
+  EXPECT_LOG_CONTAINS(
+      "warning",
+      "message 'utility_test.file_wip.Foo' is contained in proto file "
+      "'test/common/protobuf/utility_test_file_wip.proto' marked as work in progress. Use of this "
+      "message is subject to breaking changes and is not covered by the security policy.",
+      MessageUtil::checkForUnexpectedFields(foo, ProtobufMessage::getStrictValidationVisitor()));
+}
+
+TEST_F(ProtobufUtilityTest, MessageWip) {
+  ProtobufMessage::WarningValidationVisitorImpl validation_visitor;
+
+  utility_test::message_field_wip::Foo foo;
+  EXPECT_LOG_CONTAINS(
+      "warning",
+      "message 'utility_test.message_field_wip.Foo' is marked as work in progress. Use of this "
+      "message is subject to breaking changes and is not covered by the security policy.",
+      MessageUtil::checkForUnexpectedFields(foo, validation_visitor));
+
+  utility_test::message_field_wip::Bar bar;
+  EXPECT_NO_LOGS(MessageUtil::checkForUnexpectedFields(bar, validation_visitor));
+
+  bar.set_test_field(true);
+  EXPECT_LOG_CONTAINS(
+      "warning",
+      "field 'utility_test.message_field_wip.Bar.test_field' is marked as work in progress. Use of "
+      "this field is subject to breaking changes and is not covered by the security policy.",
+      MessageUtil::checkForUnexpectedFields(bar, validation_visitor));
 }
 
 class DeprecatedFieldsTest : public testing::Test, protected RuntimeStatsHelper {
