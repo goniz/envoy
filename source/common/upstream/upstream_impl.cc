@@ -1283,9 +1283,9 @@ ClusterInfoImpl::ResourceManagers::load(const envoy::config::cluster::v3::Cluste
                                         Runtime::Loader& runtime, const std::string& cluster_name,
                                         Stats::Scope& stats_scope,
                                         const envoy::config::core::v3::RoutingPriority& priority) {
-  uint64_t max_connections = 1024;
-  uint64_t max_pending_requests = 1024;
-  uint64_t max_requests = 1024;
+  uint64_t max_connections = 10000;
+  uint64_t max_pending_requests = 10000;
+  uint64_t max_requests = 10000;
   uint64_t max_retries = 3;
   uint64_t max_connection_pools = std::numeric_limits<uint64_t>::max();
 
